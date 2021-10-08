@@ -31,6 +31,23 @@
       "default": false,
       "description": "Flag to indicate if a directory is created."
     },
+    "spec": {
+      "type": "boolean",
+      "default": false,
+      "description": "Specifies if specs file are generated."
+    },
+    "type": {
+      "type": "string",
+      "description": "The transport layer.",
+      "default": "rest",
+      "enum": [
+        "rest",
+        "graphql-code-first",
+        "graphql-schema-first",
+        "microservice",
+        "ws"
+      ]
+    },
     "skipImport": {
       "type": "boolean",
       "description": "Flag to skip the module import.",
