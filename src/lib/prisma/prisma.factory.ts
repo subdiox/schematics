@@ -2,10 +2,8 @@ import { join, Path, strings } from '@angular-devkit/core';
 import {
   apply,
   chain,
-  filter,
   mergeWith,
   move,
-  noop,
   Rule,
   SchematicContext,
   SchematicsException,
@@ -21,12 +19,6 @@ import { PrismaOptions } from './prisma.schema';
 import { classify } from '@angular-devkit/core/src/utils/strings';
 import * as pluralize from 'pluralize';
 import { ModuleFinder, ModuleDeclarator, DeclarationOptions } from '../..';
-import {
-  addPackageJsonDependency,
-  getPackageJsonDependency,
-  NodeDependencyType,
-} from '../../utils/dependencies.utils';
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
 export function main(options: PrismaOptions): Rule {
   options = transform(options);
@@ -34,7 +26,6 @@ export function main(options: PrismaOptions): Rule {
   return (tree: Tree, context: SchematicContext) => {
     return branchAndMerge(
       chain([
-        addMappedTypesDependencyIfApplies(options),
         mergeSourceRoot(options),
         addDeclarationToModule(options),
         mergeWith(generate(options)),
@@ -71,51 +62,6 @@ function transform(options: PrismaOptions): PrismaOptions {
 function generate(options: PrismaOptions): Source {
   return (context: SchematicContext) =>
     apply(url(join('./files' as Path, options.language)), [
-      filter((path) => {
-        if (path.endsWith('.dto.ts')) {
-          return (
-            options.type !== 'graphql-code-first' &&
-            options.type !== 'graphql-schema-first' &&
-            options.crud
-          );
-        }
-        if (path.endsWith('.input.ts')) {
-          return (
-            (options.type === 'graphql-code-first' ||
-              options.type === 'graphql-schema-first') &&
-            options.crud
-          );
-        }
-        if (
-          path.endsWith('.resolver.ts') ||
-          path.endsWith('.resolver.spec.ts')
-        ) {
-          return (
-            options.type === 'graphql-code-first' ||
-            options.type === 'graphql-schema-first'
-          );
-        }
-        if (path.endsWith('.graphql')) {
-          return options.type === 'graphql-schema-first' && options.crud;
-        }
-        if (
-          path.endsWith('controller.ts') ||
-          path.endsWith('.controller.spec.ts')
-        ) {
-          return options.type === 'microservice' || options.type === 'rest';
-        }
-        if (path.endsWith('.gateway.ts') || path.endsWith('.gateway.spec.ts')) {
-          return options.type === 'ws';
-        }
-        if (path.includes('@ent')) {
-          // Entity class file workaround
-          // When an invalid glob path for entities has been specified (on the application part)
-          // TypeORM was trying to load a template class
-          return options.crud;
-        }
-        return true;
-      }),
-      options.spec ? noop() : filter((path) => !path.endsWith('.spec.ts')),
       template({
         ...strings,
         ...options,
@@ -126,7 +72,6 @@ function generate(options: PrismaOptions): Source {
           );
         },
         singular: (name: string) => pluralize.singular(name),
-        ent: (name: string) => name + '.entity',
       }),
       move(options.path),
     ])(context);
@@ -154,39 +99,5 @@ function addDeclarationToModule(options: PrismaOptions): Rule {
       } as DeclarationOptions),
     );
     return tree;
-  };
-}
-
-function addMappedTypesDependencyIfApplies(options: PrismaOptions): Rule {
-  return (host: Tree, context: SchematicContext) => {
-    try {
-      if (options.type === 'graphql-code-first') {
-        return;
-      }
-      if (options.type === 'rest') {
-        const nodeDependencyRef = getPackageJsonDependency(
-          host,
-          '@nestjs/swagger',
-        );
-        if (nodeDependencyRef) {
-          options.isSwaggerInstalled = true;
-          return;
-        }
-      }
-      const nodeDependencyRef = getPackageJsonDependency(
-        host,
-        '@nestjs/mapped-types',
-      );
-      if (!nodeDependencyRef) {
-        addPackageJsonDependency(host, {
-          type: NodeDependencyType.Default,
-          name: '@nestjs/mapped-types',
-          version: '*',
-        });
-        context.addTask(new NodePackageInstallTask());
-      }
-    } catch (err) {
-      // ignore if "package.json" not found
-    }
   };
 }

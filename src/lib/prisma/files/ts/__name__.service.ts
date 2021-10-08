@@ -4,6 +4,8 @@ import { <%= classify(name) %>, Prisma } from '.prisma/client';
 
 @Injectable()
 export class <%= classify(name) %>Service {
+  constructor(private prisma: PrismaService) {}
+
   async create(data: Prisma.<%= classify(name) %>CreateInput): Promise<<%= classify(name) %>> {
     return this.prisma.<%= lowercased(name) %>.create({
       data,
