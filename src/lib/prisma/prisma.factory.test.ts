@@ -3,9 +3,9 @@ import {
   UnitTestTree,
 } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
-import { ResourceOptions } from './resource.schema';
+import { PrismaOptions } from './prisma.schema';
 
-describe('Resource Factory', () => {
+describe('Prisma Factory', () => {
   const runner: SchematicTestRunner = new SchematicTestRunner(
     '.',
     path.join(process.cwd(), 'src/collection.json'),
@@ -13,7 +13,7 @@ describe('Resource Factory', () => {
 
   describe('[REST API]', () => {
     it('should generate appropriate files ', async () => {
-      const options: ResourceOptions = {
+      const options: PrismaOptions = {
         name: 'users',
       };
       const tree = await runner
@@ -33,7 +33,7 @@ describe('Resource Factory', () => {
     });
     describe('when "crud" option is not enabled', () => {
       it('should generate appropriate files (without dtos)', async () => {
-        const options: ResourceOptions = {
+        const options: PrismaOptions = {
           name: 'users',
           crud: false,
         };
@@ -52,7 +52,7 @@ describe('Resource Factory', () => {
     });
     describe('when "spec" option is not enabled', () => {
       it('should generate appropriate files (without dtos)', async () => {
-        const options: ResourceOptions = {
+        const options: PrismaOptions = {
           name: 'users',
           spec: false,
           crud: false,
@@ -71,7 +71,7 @@ describe('Resource Factory', () => {
   });
 
   describe('[REST API]', () => {
-    const options: ResourceOptions = {
+    const options: PrismaOptions = {
       name: 'users',
       isSwaggerInstalled: true,
     };
@@ -238,7 +238,7 @@ describe('UsersService', () => {
   });
 
   describe('[REST API - with "crud" disabled]', () => {
-    const options: ResourceOptions = {
+    const options: PrismaOptions = {
       name: 'users',
       crud: false,
       spec: false,
@@ -300,7 +300,7 @@ export class UsersModule {}
 
   describe('[Microservice]', () => {
     it('should generate appropriate files ', async () => {
-      const options: ResourceOptions = {
+      const options: PrismaOptions = {
         name: 'users',
         type: 'microservice',
       };
@@ -321,7 +321,7 @@ export class UsersModule {}
     });
     describe('when "crud" option is not enabled', () => {
       it('should generate appropriate files (without dtos)', async () => {
-        const options: ResourceOptions = {
+        const options: PrismaOptions = {
           name: 'users',
           crud: false,
           type: 'microservice',
@@ -341,7 +341,7 @@ export class UsersModule {}
     });
     describe('when "spec" option is not enabled', () => {
       it('should generate appropriate files (without dtos)', async () => {
-        const options: ResourceOptions = {
+        const options: PrismaOptions = {
           name: 'users',
           spec: false,
           crud: false,
@@ -361,7 +361,7 @@ export class UsersModule {}
   });
 
   describe('[Microservice]', () => {
-    const options: ResourceOptions = {
+    const options: PrismaOptions = {
       name: 'users',
       type: 'microservice',
     };
@@ -531,7 +531,7 @@ describe('UsersService', () => {
   });
 
   describe('[Microservice - with "crud" disabled]', () => {
-    const options: ResourceOptions = {
+    const options: PrismaOptions = {
       name: 'users',
       type: 'microservice',
       crud: false,
@@ -594,7 +594,7 @@ export class UsersModule {}
 
   describe('[WebSockets]', () => {
     it('should generate appropriate files ', async () => {
-      const options: ResourceOptions = {
+      const options: PrismaOptions = {
         name: 'users',
         type: 'ws',
       };
@@ -615,7 +615,7 @@ export class UsersModule {}
     });
     describe('when "crud" option is not enabled', () => {
       it('should generate appropriate files (without dtos)', async () => {
-        const options: ResourceOptions = {
+        const options: PrismaOptions = {
           name: 'users',
           crud: false,
           type: 'ws',
@@ -635,7 +635,7 @@ export class UsersModule {}
     });
     describe('when "spec" option is not enabled', () => {
       it('should generate appropriate files (without dtos)', async () => {
-        const options: ResourceOptions = {
+        const options: PrismaOptions = {
           name: 'users',
           spec: false,
           crud: false,
@@ -655,7 +655,7 @@ export class UsersModule {}
   });
 
   describe('[WebSockets]', () => {
-    const options: ResourceOptions = {
+    const options: PrismaOptions = {
       name: 'users',
       crud: true,
       type: 'ws',
@@ -822,7 +822,7 @@ describe('UsersService', () => {
   });
 
   describe('[WebSockets - with "crud" disabled]', () => {
-    const options: ResourceOptions = {
+    const options: PrismaOptions = {
       name: 'users',
       crud: false,
       spec: false,
@@ -883,7 +883,7 @@ export class UsersModule {}
 
   describe('[GraphQL - Code first]', () => {
     it('should generate appropriate files ', async () => {
-      const options: ResourceOptions = {
+      const options: PrismaOptions = {
         name: 'users',
         crud: true,
         type: 'graphql-code-first',
@@ -905,7 +905,7 @@ export class UsersModule {}
     });
     describe('when "crud" option is not enabled', () => {
       it('should generate appropriate files (without dtos)', async () => {
-        const options: ResourceOptions = {
+        const options: PrismaOptions = {
           name: 'users',
           crud: false,
           type: 'graphql-code-first',
@@ -925,7 +925,7 @@ export class UsersModule {}
     });
     describe('when "spec" option is not enabled', () => {
       it('should generate appropriate files (without dtos)', async () => {
-        const options: ResourceOptions = {
+        const options: PrismaOptions = {
           name: 'users',
           spec: false,
           crud: false,
@@ -944,7 +944,7 @@ export class UsersModule {}
     });
   });
   describe('[GraphQL - Code first]', () => {
-    const options: ResourceOptions = {
+    const options: PrismaOptions = {
       name: 'users',
       crud: true,
       type: 'graphql-code-first',
@@ -1127,7 +1127,7 @@ describe('UsersService', () => {
 
   describe('[GraphQL - Schema first]', () => {
     it('should generate appropriate files ', async () => {
-      const options: ResourceOptions = {
+      const options: PrismaOptions = {
         name: 'users',
         type: 'graphql-schema-first',
       };
@@ -1149,7 +1149,7 @@ describe('UsersService', () => {
     });
     describe('when "crud" option is not enabled', () => {
       it('should generate appropriate files (without dtos)', async () => {
-        const options: ResourceOptions = {
+        const options: PrismaOptions = {
           name: 'users',
           crud: false,
           type: 'graphql-schema-first',
@@ -1169,7 +1169,7 @@ describe('UsersService', () => {
     });
     describe('when "spec" option is not enabled', () => {
       it('should generate appropriate files (without dtos)', async () => {
-        const options: ResourceOptions = {
+        const options: PrismaOptions = {
           name: 'users',
           spec: false,
           crud: false,
@@ -1188,7 +1188,7 @@ describe('UsersService', () => {
     });
   });
   describe('[GraphQL - Schema first]', () => {
-    const options: ResourceOptions = {
+    const options: PrismaOptions = {
       name: 'users',
       type: 'graphql-schema-first',
     };

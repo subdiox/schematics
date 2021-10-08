@@ -99,6 +99,11 @@
       "factory": "./lib/resource/resource.factory#main",
       "description": "Create a Nest resource.",
       "schema": "./lib/resource/schema.json"
+    },
+    "prisma": {
+      "factory": "./lib/prisma/prisma.factory#main",
+      "description": "Create a Nest and Prisma resource.",
+      "schema": "./lib/prisma/schema.json"
     }
   }
 }
