@@ -42,8 +42,8 @@ function transform(options: PrismaOptions): PrismaOptions {
   target.metadata = 'imports';
 
   const location: Location = new NameParser().parse(target);
-  target.name = strings.dasherize(location.name);
-  target.path = strings.dasherize(location.path);
+  target.name = location.name;
+  target.path = location.path;
   target.language = target.language !== undefined ? target.language : 'ts';
   if (target.language === 'js') {
     throw new Error(

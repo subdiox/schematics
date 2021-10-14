@@ -1,6 +1,7 @@
+import { Prisma } from '.prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { <%= classify(name) %>, Prisma } from '.prisma/client';
+import { <%= classify(name) %> } from './entities/<%= lowercased(name) %>.entity';
 
 @Injectable()
 export class <%= classify(name) %>Service {
