@@ -35,6 +35,11 @@
       "type": "boolean",
       "description": "Flag to skip the module import.",
       "default": false
+    },
+    "isSwaggerInstalled": {
+      "type": "boolean",
+      "description": "Flag to indicate if Swagger is installed.",
+      "default": false
     }
   },
   "required": ["name"]
