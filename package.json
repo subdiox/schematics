@@ -1,5 +1,5 @@
 {
-  "name": "@nestjs/schematics",
+  "name": "@subdiox/schematics",
   "version": "9.1.0",
   "description": "Nest - modern, fast, powerful node.js web framework (@schematics)",
   "main": "dist/index.js",
@@ -28,7 +28,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nestjs/schematics.git"
+    "url": "git+https://github.com/subdiox/schematics.git"
   },
   "contributors": [
     "ThomRick",
@@ -37,9 +37,9 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/nestjs/schematics/issues"
+    "url": "https://github.com/subdiox/schematics/issues"
   },
-  "homepage": "https://github.com/nestjs/schematics#readme",
+  "homepage": "https://github.com/subdiox/schematics#readme",
   "dependencies": {
     "@angular-devkit/core": "15.2.6",
     "@angular-devkit/schematics": "15.2.6",
