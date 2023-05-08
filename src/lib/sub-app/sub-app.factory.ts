@@ -1,14 +1,9 @@
-import {
-  join,
-  normalize,
-  parseJson,
-  Path,
-  strings,
-} from '@angular-devkit/core';
+import { join, normalize, Path, strings } from '@angular-devkit/core';
 import {
   apply,
   branchAndMerge,
   chain,
+  FileEntry,
   mergeWith,
   move,
   noop,
@@ -19,10 +14,12 @@ import {
   Tree,
   url,
 } from '@angular-devkit/schematics';
-import * as fse from 'fs-extra';
+import { existsSync, readFileSync } from 'fs';
+import { parse } from 'jsonc-parser';
+import { normalizeToKebabOrSnakeCase } from '../../utils/formatting';
 import {
-  DEFAULT_APP_NAME,
   DEFAULT_APPS_PATH,
+  DEFAULT_APP_NAME,
   DEFAULT_DIR_ENTRY_APP,
   DEFAULT_LANGUAGE,
   DEFAULT_LIB_PATH,
@@ -62,10 +59,12 @@ export function main(options: SubAppOptions): Rule {
 
 function getAppNameFromPackageJson(): string {
   try {
-    if (!fse.existsSync('./package.json')) {
+    if (!existsSync('./package.json')) {
       return DEFAULT_DIR_ENTRY_APP;
     }
-    const packageJson = fse.readJsonSync('./package.json');
+    const packageJson = JSON.parse(
+      stripBom(readFileSync('./package.json', 'utf-8')),
+    );
     if (!packageJson.name) {
       return DEFAULT_DIR_ENTRY_APP;
     }
@@ -77,6 +76,13 @@ function getAppNameFromPackageJson(): string {
   }
 }
 
+function stripBom(value: string): string {
+  if (value.charCodeAt(0) === 0xfeff) {
+    return value.slice(1);
+  }
+  return value;
+}
+
 function transform(options: SubAppOptions): SubAppOptions {
   const target: SubAppOptions = Object.assign({}, options);
   const defaultSourceRoot =
@@ -86,7 +92,7 @@ function transform(options: SubAppOptions): SubAppOptions {
     target.name = DEFAULT_APP_NAME;
   }
   target.language = !!target.language ? target.language : DEFAULT_LANGUAGE;
-  target.name = strings.dasherize(target.name);
+  target.name = normalizeToKebabOrSnakeCase(target.name);
   target.path =
     target.path !== undefined
       ? join(normalize(defaultSourceRoot), target.path)
@@ -107,7 +113,7 @@ function isMonorepo(host: Tree) {
     return false;
   }
   const sourceText = source.toString('utf-8');
-  const optionsObj = parseJson(sourceText) as Record<string, any>;
+  const optionsObj = parse(sourceText) as Record<string, any>;
   return !!optionsObj.monorepo;
 }
 
@@ -119,8 +125,8 @@ function updateJsonFile<T>(
   const source = host.read(path);
   if (source) {
     const sourceText = source.toString('utf-8');
-    const json = parseJson(sourceText);
-    callback((json as {}) as T);
+    const json = parse(sourceText);
+    callback(json as unknown as T);
     host.overwrite(path, JSON.stringify(json, null, 2));
   }
   return host;
@@ -174,8 +180,13 @@ function updateNpmScripts(
     return;
   }
   const defaultFormatScriptName = 'format';
+  const defaultStartScriptName = 'start:prod';
   const defaultTestScriptName = 'test:e2e';
-  if (!scripts[defaultTestScriptName] && !scripts[defaultFormatScriptName]) {
+  if (
+    !scripts[defaultTestScriptName] &&
+    !scripts[defaultFormatScriptName] &&
+    !scripts[defaultStartScriptName]
+  ) {
     return;
   }
   if (
@@ -188,9 +199,9 @@ function updateNpmScripts(
       defaultAppName,
       defaultTestDir,
     );
-    scripts[defaultTestScriptName] = (scripts[
-      defaultTestScriptName
-    ] as string).replace(defaultTestDir, newTestDir);
+    scripts[defaultTestScriptName] = (
+      scripts[defaultTestScriptName] as string
+    ).replace(defaultTestDir, newTestDir);
   }
   if (
     scripts[defaultFormatScriptName] &&
@@ -201,6 +212,16 @@ function updateNpmScripts(
     scripts[
       defaultFormatScriptName
     ] = `prettier --write "${defaultSourceRoot}/**/*.ts" "${DEFAULT_LIB_PATH}/**/*.ts"`;
+  }
+  if (
+    scripts[defaultStartScriptName] &&
+    scripts[defaultStartScriptName].indexOf('dist/main') >= 0
+  ) {
+    const defaultSourceRoot =
+      options.rootDir !== undefined ? options.rootDir : DEFAULT_APPS_PATH;
+    scripts[
+      defaultStartScriptName
+    ] = `node dist/${defaultSourceRoot}/${defaultAppName}/main`;
   }
 }
 
@@ -224,9 +245,8 @@ function updateJestOptions(
     jestOptions.roots.push(jestSourceRoot);
 
     const originalSourceRoot = `<rootDir>/src/`;
-    const originalSourceRootIndex = jestOptions.roots.indexOf(
-      originalSourceRoot,
-    );
+    const originalSourceRootIndex =
+      jestOptions.roots.indexOf(originalSourceRoot);
     if (originalSourceRootIndex >= 0) {
       (jestOptions.roots as string[]).splice(originalSourceRootIndex, 1);
     }
@@ -242,24 +262,26 @@ function moveDefaultAppToApps(
     if (process.env.NODE_ENV === TEST_ENV) {
       return host;
     }
-    try {
-      if (fse.existsSync(sourceRoot)) {
-        fse.moveSync(
-          sourceRoot,
-          join(projectRoot as Path, appName, sourceRoot),
-        );
-      }
-      const testDir = 'test';
-      if (fse.existsSync(testDir)) {
-        fse.moveSync(testDir, join(projectRoot as Path, appName, testDir));
-      }
-    } catch (err) {
-      throw new SchematicsException(
-        `The "${projectRoot}" directory exists already.`,
-      );
-    }
+    const appDestination = join(projectRoot as Path, appName);
+
+    moveDirectoryTo(sourceRoot, appDestination, host);
+
+    moveDirectoryTo('test', appDestination, host);
     return host;
   };
+}
+
+function moveDirectoryTo(
+  srcDir: string,
+  destination: string,
+  tree: Tree,
+): void {
+  tree.getDir(srcDir).visit((filePath: Path, file: Readonly<FileEntry>) => {
+    const newFilePath = join(destination as Path, filePath);
+    tree.create(newFilePath, file.content);
+    tree.delete(filePath);
+  });
+  tree.delete(srcDir);
 }
 
 function addAppsToCliOptions(

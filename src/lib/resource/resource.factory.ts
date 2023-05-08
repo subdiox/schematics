@@ -1,6 +1,8 @@
 import { join, Path, strings } from '@angular-devkit/core';
+import { classify } from '@angular-devkit/core/src/utils/strings';
 import {
   apply,
+  branchAndMerge,
   chain,
   filter,
   mergeWith,
@@ -11,22 +13,21 @@ import {
   SchematicsException,
   Source,
   template,
-  url,
   Tree,
-  branchAndMerge,
+  url,
 } from '@angular-devkit/schematics';
-import { Location, NameParser } from '../../utils/name.parser';
-import { mergeSourceRoot } from '../../utils/source-root.helpers';
-import { ResourceOptions } from './resource.schema';
-import { classify } from '@angular-devkit/core/src/utils/strings';
+import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import * as pluralize from 'pluralize';
-import { ModuleFinder, ModuleDeclarator, DeclarationOptions } from '../..';
+import { DeclarationOptions, ModuleDeclarator, ModuleFinder } from '../..';
 import {
   addPackageJsonDependency,
   getPackageJsonDependency,
   NodeDependencyType,
 } from '../../utils/dependencies.utils';
-import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
+import { normalizeToKebabOrSnakeCase } from '../../utils/formatting';
+import { Location, NameParser } from '../../utils/name.parser';
+import { mergeSourceRoot } from '../../utils/source-root.helpers';
+import { ResourceOptions } from './resource.schema';
 
 export function main(options: ResourceOptions): Rule {
   options = transform(options);
@@ -51,14 +52,17 @@ function transform(options: ResourceOptions): ResourceOptions {
   target.metadata = 'imports';
 
   const location: Location = new NameParser().parse(target);
-  target.name = strings.dasherize(location.name);
-  target.path = strings.dasherize(location.path);
+  target.name = normalizeToKebabOrSnakeCase(location.name);
+  target.path = normalizeToKebabOrSnakeCase(location.path);
   target.language = target.language !== undefined ? target.language : 'ts';
   if (target.language === 'js') {
     throw new Error(
       'The "resource" schematic does not support JavaScript language (only TypeScript is supported).',
     );
   }
+  target.specFileSuffix = normalizeToKebabOrSnakeCase(
+    options.specFileSuffix || 'spec',
+  );
 
   target.path = target.flat
     ? target.path
@@ -88,7 +92,7 @@ function generate(options: ResourceOptions): Source {
         }
         if (
           path.endsWith('.resolver.ts') ||
-          path.endsWith('.resolver.spec.ts')
+          path.endsWith('.resolver.__specFileSuffix__.ts')
         ) {
           return (
             options.type === 'graphql-code-first' ||
@@ -100,11 +104,11 @@ function generate(options: ResourceOptions): Source {
         }
         if (
           path.endsWith('controller.ts') ||
-          path.endsWith('.controller.spec.ts')
+          path.endsWith('.controller.__specFileSuffix__.ts')
         ) {
           return options.type === 'microservice' || options.type === 'rest';
         }
-        if (path.endsWith('.gateway.ts') || path.endsWith('.gateway.spec.ts')) {
+        if (path.endsWith('.gateway.ts') || path.endsWith('.gateway.__specFileSuffix__.ts')) {
           return options.type === 'ws';
         }
         if (path.includes('@ent')) {
@@ -115,7 +119,12 @@ function generate(options: ResourceOptions): Source {
         }
         return true;
       }),
-      options.spec ? noop() : filter((path) => !path.endsWith('.spec.ts')),
+      options.spec 
+        ? noop() 
+        : filter((path) => {
+            const suffix = `.__specFileSuffix__.ts`;
+            return !path.endsWith(suffix)
+        }),
       template({
         ...strings,
         ...options,

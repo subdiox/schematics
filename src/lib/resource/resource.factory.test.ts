@@ -31,6 +31,25 @@ describe('Resource Factory', () => {
         '/users/entities/user.entity.ts',
       ]);
     });
+    it("should keep underscores in resource's path and file name", async () => {
+      const options: ResourceOptions = {
+        name: '_users',
+      };
+      const tree = await runner
+        .runSchematicAsync('resource', options)
+        .toPromise();
+      const files = tree.files;
+      expect(files).toEqual([
+        '/_users/_users.controller.spec.ts',
+        '/_users/_users.controller.ts',
+        '/_users/_users.module.ts',
+        '/_users/_users.service.spec.ts',
+        '/_users/_users.service.ts',
+        '/_users/dto/create-_user.dto.ts',
+        '/_users/dto/update-_user.dto.ts',
+        '/_users/entities/_user.entity.ts',
+      ]);
+    });
     describe('when "crud" option is not enabled', () => {
       it('should generate appropriate files (without dtos)', async () => {
         const options: ResourceOptions = {
@@ -1379,5 +1398,49 @@ type Mutation {
 }
 `);
     });
+  });
+  it('should create spec files', async () => {
+    const options: ResourceOptions = {
+      name: 'foo',
+      spec: true,
+      flat: true,
+    };
+    const tree: UnitTestTree = await runner
+      .runSchematicAsync('resource', options)
+      .toPromise();
+    const files: string[] = tree.files;
+
+    expect(
+      files.find((filename) => filename === '/foo.controller.spec.ts'),
+    ).toBeDefined();
+    expect(
+      files.find((filename) => filename === '/foo.service.spec.ts'),
+    ).toBeDefined();
+  });
+  it('should create spec files with custom file suffix', async () => {
+    const options: ResourceOptions = {
+      name: 'foo',
+      spec: true,
+      specFileSuffix: 'test',
+      flat: true,
+    };
+    const tree: UnitTestTree = await runner
+      .runSchematicAsync('resource', options)
+      .toPromise();
+    const files: string[] = tree.files;
+
+    expect(
+      files.find((filename) => filename === '/foo.controller.spec.ts'),
+    ).toBeUndefined();
+    expect(
+      files.find((filename) => filename === '/foo.controller.test.ts'),
+    ).toBeDefined();
+
+    expect(
+      files.find((filename) => filename === '/foo.service.spec.ts'),
+    ).toBeUndefined();
+    expect(
+      files.find((filename) => filename === '/foo.service.test.ts'),
+    ).toBeDefined();
   });
 });

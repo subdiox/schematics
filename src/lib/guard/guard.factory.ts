@@ -13,6 +13,7 @@ import {
   template,
   url,
 } from '@angular-devkit/schematics';
+import { normalizeToKebabOrSnakeCase } from '../../utils/formatting';
 import { Location, NameParser } from '../../utils/name.parser';
 import { mergeSourceRoot } from '../../utils/source-root.helpers';
 import { GuardOptions } from './guard.schema';
@@ -28,9 +29,12 @@ function transform(options: GuardOptions): GuardOptions {
     throw new SchematicsException('Option (name) is required.');
   }
   const location: Location = new NameParser().parse(target);
-  target.name = strings.dasherize(location.name);
-  target.path = strings.dasherize(location.path);
+  target.name = normalizeToKebabOrSnakeCase(location.name);
+  target.path = normalizeToKebabOrSnakeCase(location.path);
   target.language = target.language !== undefined ? target.language : 'ts';
+  target.specFileSuffix = normalizeToKebabOrSnakeCase(
+    options.specFileSuffix || 'spec',
+  );
 
   target.path = target.flat
     ? target.path
@@ -41,7 +45,13 @@ function transform(options: GuardOptions): GuardOptions {
 function generate(options: GuardOptions): Source {
   return (context: SchematicContext) =>
     apply(url(join('./files' as Path, options.language)), [
-      options.spec ? noop() : filter((path) => !path.endsWith('.spec.ts')),
+      options.spec 
+        ? noop() 
+        : filter((path) => {
+            const languageExtension = options.language || 'ts';
+            const suffix = `.__specFileSuffix__.${languageExtension}`;
+            return !path.endsWith(suffix)
+        }),
       template({
         ...strings,
         ...options,

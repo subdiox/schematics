@@ -32,7 +32,9 @@ export class MetadataManager {
     );
     const decoratorNodes: Node[] = this.getDecoratorMetadata(source, '@Module');
     const node: Node = decoratorNodes[0];
-    const matchingProperties: ObjectLiteralElement[] = (node as ObjectLiteralExpression).properties
+    const matchingProperties: ObjectLiteralElement[] = (
+      node as ObjectLiteralExpression
+    ).properties
       .filter((prop) => prop.kind === SyntaxKind.PropertyAssignment)
       .filter((prop: PropertyAssignment) => {
         const name = prop.name;
@@ -170,7 +172,7 @@ export class MetadataManager {
       node = arrLiteral.elements;
     }
     if (Array.isArray(node)) {
-      const nodeArray = (node as {}) as Node[];
+      const nodeArray = node as unknown as Node[];
       const symbolsArray = nodeArray.map((childNode) =>
         childNode.getText(source),
       );
@@ -187,11 +189,12 @@ export class MetadataManager {
       toInsert = staticOptions ? this.addBlankLines(symbol) : `${symbol}`;
     } else {
       const text = (node as Node).getFullText(source);
-      if (text.match(/^\r?\n/)) {
-        toInsert = `,${text.match(/^\r?\n(\r?)\s+/)[0]}${symbol}`;
-      } else {
-        toInsert = `, ${symbol}`;
-      }
+      const itemSeparator = ( 
+        text.match(/^\r?\n(\r?)\s+/) ||
+        text.match(/^\r?\n/) ||
+        ' '
+      )[0];
+      toInsert = `,${itemSeparator}${symbol}`;
     }
     return this.content.split('').reduce((content, char, index) => {
       if (index === position) {

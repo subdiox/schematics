@@ -2,7 +2,8 @@ export interface ApplicationOptions {
   /**
    * Nest application name.
    */
-  name: string;
+  // NOTE: We could have a `number` here due to this issue: https://github.com/nestjs/nest-cli/issues/1519
+  name: string | number;
   /**
    * Nest application author.
    */
@@ -30,7 +31,7 @@ export interface ApplicationOptions {
   /**
    * The used package manager.
    */
-  packageManager?: 'npm' | 'yarn' | 'undefined';
+  packageManager?: 'npm' | 'yarn' | 'pnpm' | 'undefined';
   /**
    * Nest included production dependencies (comma separated values).
    */
